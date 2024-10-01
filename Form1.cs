@@ -1,6 +1,7 @@
 using Microsoft.VisualBasic;
 using Npgsql;
 using System.Data;
+using System.Diagnostics.Eventing.Reader;
 using System.Security.Principal;
 using System.Xml.Linq;
 
@@ -29,22 +30,31 @@ namespace BankAccount
         }
         private void Form1_Load(object sender, EventArgs e)
         {
-            dataGridView1.DataSource = GetData("Select CL.Name,PINFL,C.CardNumber,CT.card_tip as Card_Tip,A.Number,A.Type from Client CL Join Card C on CL.Id = C.clientid JOIN Account A on C.clientid = A.Card_Id JOIN CardType CT on CT.id = C.Card_type order by name");
-            dataGridView6.DataSource = GetData("Select CL.Name,PINFL,C.CardNumber,CT.card_tip as Card_Tip,A.Number,A.Type from Client CL Join Card C on CL.Id = C.clientid JOIN Account A on C.clientid = A.Card_Id JOIN CardType CT on CT.id = C.Card_type order by name");
-            dataGridView2.DataSource = GetData("Select CL.Name,A.Number,A.Type,C.CardNumber,CT.card_tip,PINFL from Client CL Join Card C on CL.Id = C.clientid JOIN Account A on C.clientid = A.Card_Id JOIN CardType CT on CT.id = C.Card_type order by name;");
-            dataGridView3.DataSource = GetData("select c.id,c.Name,c.PinFl from  client c");
-            dataGridView4.DataSource = GetData("select C2.id,C2.Name,c.CardNumber from Account a right join Card c on c.clientid = a.Card_Id join Client C2 on c.ClientId = C2.Id where a.number is null order by C2.id;");
-            dataGridView5.DataSource = GetData("select C.id,C.Name,c.PinFl   from Client C left join Card C2 on C.Id = C2.ClientId left join cardtype cr on C2.Card_type = cr.id where cr.card_tip is null order by C.id;");
+            dataGridView1.DataSource = GetData("Select CL.Name,PINFL,C.CardNumber,CT.card_tip as Card_Tip,A.Number,A.Type from Client CL Join Card C on CL.Id = C.clientid JOIN Account A on C.clientid = A.Card_Id JOIN CardType CT on CT.id = C.Card_type where CL.deleted = false order by name");
+            dataGridView6.DataSource = GetData("Select CL.Name,PINFL,C.CardNumber,CT.card_tip as Card_Tip,A.Number,A.Type from Client CL Join Card C on CL.Id = C.clientid JOIN Account A on C.clientid = A.Card_Id JOIN CardType CT on CT.id = C.Card_type where CL.deleted = false order by name ");
+            dataGridView2.DataSource = GetData("Select CL.Name,A.Number,A.Type,C.CardNumber,CT.card_tip,PINFL from Client CL Join Card C on CL.Id = C.clientid JOIN Account A on C.clientid = A.Card_Id JOIN CardType CT on CT.id = C.Card_type where CL.deleted = false order by name;");
+            dataGridView3.DataSource = GetData("select c.id,c.Name,c.PinFl from  client c where c.deleted = false");
+            dataGridView4.DataSource = GetData("select C2.id,C2.Name,c.CardNumber from Account a right join Card c on c.clientid = a.Card_Id join Client C2 on c.ClientId = C2.Id where a.number is null and C2.deleted = false order by C2.id;");
+            dataGridView7.DataSource = GetData("Select CL.Name,PINFL,C.CardNumber,CT.card_tip as Card_Tip,A.Number,A.Type from Client CL Join Card C on CL.Id = C.clientid JOIN Account A on C.clientid = A.Card_Id JOIN CardType CT on CT.id = C.Card_type where CL.deleted = true");
+            dataGridView5.DataSource = GetData("select C.id,C.Name,c.PinFl   from Client C left join Card C2 on C.Id = C2.ClientId left join cardtype cr on C2.Card_type = cr.id where cr.card_tip is null and C.deleted = false order by C.id;");
             AddClient();
             AddClinentCBItem();
             AddCardType();
             AddClientCard();
-
-
+            DeleteData();
+            ReverseData();
+        }
+        void ReverseData()
+        {
+            DataTable dataTable = GetData("select c.id,concat(c.name,'-',c.pinfl) as name from client c where c.deleted = true;");
+            Reverse.DisplayMember = "name";
+            Reverse.ValueMember = "id";
+            Reverse.DataSource = dataTable;
+            Reverse.SelectedIndex = -1;
         }
         void AddClinentCBItem()
         {
-            DataTable UpClient = GetData("Select A.id ,concat(CL.Name,'-',CT.card_tip) as name from Client CL Join Card C on CL.Id = C.clientid JOIN Account A on C.clientid = A.Card_Id JOIN CardType CT on CT.id = C.Card_type order by name");
+            DataTable UpClient = GetData("Select A.id ,concat(CL.Name,'-',CT.card_tip) as name from Client CL Join Card C on CL.Id = C.clientid JOIN Account A on C.clientid = A.Card_Id JOIN CardType CT on CT.id = C.Card_type where CL.deleted = false order by name");
             CbUpdateName.DisplayMember = "name";
             CbUpdateName.ValueMember = "id";
             CbUpdateName.DataSource = UpClient;
@@ -60,7 +70,7 @@ namespace BankAccount
         }
         void AddClient()
         {
-            DataTable Account = GetData("select C2.id,concat(C2.Name,'-',cr.card_tip) as name from Account a right join Card c on c.clientid = a.Card_Id join Client C2 on c.ClientId = C2.Id join cardtype cr on cr.id = c.card_type  where a.number is null order by C2.id;\r\n");
+            DataTable Account = GetData("select C2.id,concat(C2.Name,'-',cr.card_tip) as name from Account a right join Card c on c.clientid = a.Card_Id join Client C2 on c.ClientId = C2.Id join cardtype cr on cr.id = c.card_type  where a.number is null and C2.deleted = false order by C2.id;");
             IdAccCr.DisplayMember = "name";
             IdAccCr.ValueMember = "c.id";
             IdAccCr.DataSource = Account;
@@ -68,46 +78,86 @@ namespace BankAccount
         }
         void AddClientCard()
         {
-            DataTable Card = GetData("select C.id,concat(C.Name,'-',c.PinFl) as name   from Client C left join Card C2 on C.Id = C2.ClientId left join cardtype cr on C2.Card_type = cr.id where cr.card_tip is null;");
+            DataTable Card = GetData("select C.id,concat(C.Name,'-',c.PinFl) as name   from Client C left join Card C2 on C.Id = C2.ClientId left join cardtype cr on C2.Card_type = cr.id where cr.card_tip is null and C.deleted = false;");
             textBox2.DisplayMember = "name";
             textBox2.ValueMember = "id";
             textBox2.DataSource = Card;
             textBox2.SelectedIndex = -1;
 
         }
-        private void Insert()
+        void DeleteData()
         {
+            DataTable Delete1 = GetData("select c.id,concat(c.name,'-',c.pinfl) as name from client c where c.deleted = false order by name;");
+            Delete.DisplayMember = "name";
+            Delete.ValueMember = "id";
+            Delete.DataSource = Delete1;
+            Delete.SelectedIndex = -1;
 
         }
-        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        private void DDelete_Click_1(object sender, EventArgs e)
         {
-        }
-        private void label1_Click_1(object sender, EventArgs e)
+            if (Delete.SelectedIndex != -1)
+            {
+                var id = Delete.SelectedValue;
+                DialogResult DeleteResult = MessageBox.Show($"Do you want to delete : {Delete.SelectedIndex}", "Close window", MessageBoxButtons.YesNo);
+                if (DeleteResult == DialogResult.Yes)
+                {
+                    GetData($"Update client set deleted = true where id = {Delete.SelectedValue}");
+                    Delete.SelectedIndex = -1;
+                    dataGridView1.DataSource = GetData("Select CL.Name,PINFL,C.CardNumber,CT.card_tip as Card_Tip,A.Number,A.Type from Client CL Join Card C on CL.Id = C.clientid JOIN Account A on C.clientid = A.Card_Id JOIN CardType CT on CT.id = C.Card_type where CL.deleted = false order by name");
+                    dataGridView6.DataSource = GetData("Select CL.Name,PINFL,C.CardNumber,CT.card_tip as Card_Tip,A.Number,A.Type from Client CL Join Card C on CL.Id = C.clientid JOIN Account A on C.clientid = A.Card_Id JOIN CardType CT on CT.id = C.Card_type where CL.deleted = false order by name ");
+                    dataGridView2.DataSource = GetData("Select CL.Name,A.Number,A.Type,C.CardNumber,CT.card_tip,PINFL from Client CL Join Card C on CL.Id = C.clientid JOIN Account A on C.clientid = A.Card_Id JOIN CardType CT on CT.id = C.Card_type where CL.deleted = false order by name;");
+                    dataGridView3.DataSource = GetData("select c.id,c.Name,c.PinFl from  client c where c.deleted = false");
+                    dataGridView4.DataSource = GetData("select C2.id,C2.Name,c.CardNumber from Account a right join Card c on c.clientid = a.Card_Id join Client C2 on c.ClientId = C2.Id where a.number is null and C2.deleted = false order by C2.id;");
+                    dataGridView7.DataSource = GetData("Select CL.Name,PINFL,C.CardNumber,CT.card_tip as Card_Tip,A.Number,A.Type from Client CL Join Card C on CL.Id = C.clientid JOIN Account A on C.clientid = A.Card_Id JOIN CardType CT on CT.id = C.Card_type where CL.deleted = true");
+                    dataGridView5.DataSource = GetData("select C.id,C.Name,c.PinFl   from Client C left join Card C2 on C.Id = C2.ClientId left join cardtype cr on C2.Card_type = cr.id where cr.card_tip is null and C.deleted = false order by C.id;");
+                    AddClient();
+                    AddClinentCBItem();
+                    AddCardType();
+                    AddClientCard();
+                    DeleteData();
+                    ReverseData();
+                    MessageBox.Show("Malumot ochirildi", "Close window", MessageBoxButtons.OK);
+                }
+                else if (DeleteResult == DialogResult.No)
+                {
+                    Delete.SelectedIndex = -1;
+                    return;
+                }
+
+            }
+        } 
+        private void ReverseSubmit_Click(object sender, EventArgs e)
         {
-
+            if(Reverse.SelectedIndex != -1)
+            {
+              DialogResult res = MessageBox.Show("Malumotni qaytarmoqchimisiz?", "Close window", MessageBoxButtons.YesNo);
+                if (res == DialogResult.Yes)
+                {
+                    GetData($"Update client set deleted = false where id = {Reverse.SelectedValue}");
+                    Reverse.SelectedIndex = -1;
+                dataGridView1.DataSource = GetData("Select CL.Name,PINFL,C.CardNumber,CT.card_tip as Card_Tip,A.Number,A.Type from Client CL Join Card C on CL.Id = C.clientid JOIN Account A on C.clientid = A.Card_Id JOIN CardType CT on CT.id = C.Card_type where CL.deleted = false order by name");
+                dataGridView6.DataSource = GetData("Select CL.Name,PINFL,C.CardNumber,CT.card_tip as Card_Tip,A.Number,A.Type from Client CL Join Card C on CL.Id = C.clientid JOIN Account A on C.clientid = A.Card_Id JOIN CardType CT on CT.id = C.Card_type where CL.deleted = false order by name ");
+                dataGridView2.DataSource = GetData("Select CL.Name,A.Number,A.Type,C.CardNumber,CT.card_tip,PINFL from Client CL Join Card C on CL.Id = C.clientid JOIN Account A on C.clientid = A.Card_Id JOIN CardType CT on CT.id = C.Card_type where CL.deleted = false order by name;");
+                dataGridView3.DataSource = GetData("select c.id,c.Name,c.PinFl from  client c where c.deleted = false");
+                dataGridView4.DataSource = GetData("select C2.id,C2.Name,c.CardNumber from Account a right join Card c on c.clientid = a.Card_Id join Client C2 on c.ClientId = C2.Id where a.number is null and C2.deleted = false order by C2.id;");
+                dataGridView7.DataSource = GetData("Select CL.Name,PINFL,C.CardNumber,CT.card_tip as Card_Tip,A.Number,A.Type from Client CL Join Card C on CL.Id = C.clientid JOIN Account A on C.clientid = A.Card_Id JOIN CardType CT on CT.id = C.Card_type where CL.deleted = true");
+                dataGridView5.DataSource = GetData("select C.id,C.Name,c.PinFl   from Client C left join Card C2 on C.Id = C2.ClientId left join cardtype cr on C2.Card_type = cr.id where cr.card_tip is null and C.deleted = false order by C.id;");
+                AddClient();
+                AddClinentCBItem();
+                AddCardType();
+                AddClientCard();
+                DeleteData();
+                ReverseData();
+                MessageBox.Show("Malumotlar qaytarildi" , "Close window" , MessageBoxButtons.OK);
+                }
+                else if (res == DialogResult.No)
+                {
+                    Reverse.SelectedIndex = -1;
+                    return;
+                }
+            }    
         }
-
-        private void NameInsert_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void NameAccCr_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void Cardnumber_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void NameCreate_TextChanged(object sender, EventArgs e)
-        {
-
-
-        }
-
         private void submit_Click(object sender, EventArgs e)
         {
             if (NameCreate.Text != "" && PinInsert.Text != "")
@@ -143,18 +193,12 @@ namespace BankAccount
                 return;
             }
         }
-
         private void PinInsert_TextChanged(object sender, EventArgs e)
         {
             if (PinInsert.Text != "")
             {
                 dataGridView3.DataSource = GetData($"select s.name,s.Pinfl from client s where s.Pinfl like '%{PinInsert.Text}%'");
             }
-        }
-
-        private void PinFl_Click(object sender, EventArgs e)
-        {
-
         }
         private void IdAccCr_TextChanged(object sender, EventArgs e)
         {
@@ -167,7 +211,6 @@ namespace BankAccount
                 dataGridView4.DataSource = GetData("select cl.Name,a.Number,C.CardNumber,cr.card_tip from Account a    join  Card C on a.card_id = C.id   join Client cl on c.clientid = cl.id    join cardtype cr on C.Card_type = cr.id;");
             }
         }
-
         private void Accouncr_Click(object sender, EventArgs e)
         {
             if (IdAccCr.SelectedIndex != -1)
@@ -198,44 +241,10 @@ namespace BankAccount
             }
 
         }
-
-        private void comboBoxCard_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void Account_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void dataGridView4_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-
-        }
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void dataGridView3_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-
-        }
-
-
-        private void PinTextAcc_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
         private void SubmitCard_Click(object sender, EventArgs e)
         {
-            //index ni -1 tekshirish lozim, shunki tanlov bajarilgan bulsa index -1 teng bulmaydi
-            var id = textBox2.SelectedValue;    // id ni qiymatini olish uchun ishlatish mumkin
-                                                // name olish uchun ishlatish mumkin
 
-
+            var id = textBox2.SelectedValue;
             if (idTextboxType.SelectedIndex != -1)
             {
                 var card_number = GetLastCard((int)idTextboxType.SelectedValue);
@@ -298,32 +307,6 @@ namespace BankAccount
             }
             return string.Empty;
         }
-
-        private void textBox2_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void ClienItInsert_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-        private void dataGridView5_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-
-
-        }
-
-        private void Card_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void idTextboxType_TextChanged(object sender, EventArgs e)
         {
             if (idTextboxType.Text != "")
@@ -335,7 +318,6 @@ namespace BankAccount
                 dataGridView5.DataSource = GetData("select C.id,C.Name,c.PinFl   from Client C left join Card C2 on C.Id = C2.ClientId left join cardtype cr on C2.Card_type = cr.id where cr.card_tip is null;");
             }
         }
-
         private void textBox2_TextChanged_1(object sender, EventArgs e)
         {
             if (textBox2.Text != "")
@@ -347,47 +329,14 @@ namespace BankAccount
                 dataGridView5.DataSource = GetData("select C.id,C.Name,c.PinFl   from Client C left join Card C2 on C.Id = C2.ClientId left join cardtype cr on C2.Card_type = cr.id where cr.card_tip is null;");
             }
         }
-
-        private void Nametype_TextChanged(object sender, EventArgs e)
+        private void textBox7_TextChanged(object sender, EventArgs e)
         {
 
+            if (NameUpdate.Text != "")
+            {
+                dataGridView2.DataSource = GetData($"select s.name,s.Pinfl from client s where s.Pinfl like '%{NameUpdate.Text}%'");
+            }
         }
-
-        private void label1_Click_2(object sender, EventArgs e)
-        {
-
-        }
-
-        private void textBox4_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void textBox6_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void Card_idAccounIdCr_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void textBox5_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void textBox9_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void textBox10_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
         private void UpdateData_Click(object sender, EventArgs e)
         {
             if (CbUpdateName.SelectedIndex != -1)
@@ -419,64 +368,162 @@ namespace BankAccount
             }
         }
 
+
         private void textBox8_TextChanged(object sender, EventArgs e)
         {
 
         }
-
-        private void textBox7_TextChanged(object sender, EventArgs e)
+        private void PinFl_Click(object sender, EventArgs e)
         {
 
-            if (NameUpdate.Text != "")
-            {
-                dataGridView2.DataSource = GetData($"select s.name,s.Pinfl from client s where s.Pinfl like '%{NameUpdate.Text}%'");
-            }
         }
+        private void comboBoxCard_SelectedIndexChanged(object sender, EventArgs e)
+        {
 
+        }
+        private void Account_Click(object sender, EventArgs e)
+        {
+
+        }
+        private void dataGridView4_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+        private void dataGridView3_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+        private void PinTextAcc_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+        private void Card_Click(object sender, EventArgs e)
+        {
+
+        }
+        private void Nametype_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+        private void textBox2_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+        private void ClienItInsert_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+        private void dataGridView5_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+
+        }
+        private void label1_Click_2(object sender, EventArgs e)
+        {
+
+        }
+        private void textBox4_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+        private void textBox6_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+        private void Card_idAccounIdCr_Click(object sender, EventArgs e)
+        {
+
+        }
+        private void textBox5_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+        private void textBox9_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+        private void textBox10_TextChanged(object sender, EventArgs e)
+        {
+
+        }
         private void label11_Click(object sender, EventArgs e)
         {
 
         }
-
         private void AccNumUpdate_TextChanged(object sender, EventArgs e)
         {
 
         }
-
         private void AccUpdateId_TextChanged(object sender, EventArgs e)
         {
 
         }
-
         private void AccSeUpdate_TextChanged(object sender, EventArgs e)
         {
 
         }
-
         private void SubmitAccUpdate_Click(object sender, EventArgs e)
         {
 
         }
-
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
 
         }
-
         private void SubmitL_Click(object sender, EventArgs e)
         {
 
         }
-
         private void textBox2_SelectedIndexChanged(object sender, EventArgs e)
         {
 
         }
-
         private void TypeUpdate_TextChanged(object sender, EventArgs e)
         {
 
         }
-    }
+        private void Insert()
+        {
 
+        }
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+        }
+        private void label1_Click_1(object sender, EventArgs e)
+        {
+
+        }
+        private void NameInsert_Click(object sender, EventArgs e)
+        {
+
+        }
+        private void NameAccCr_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+        private void Cardnumber_Click(object sender, EventArgs e)
+        {
+
+        }
+        private void NameCreate_TextChanged(object sender, EventArgs e)
+        {
+
+
+        }
+        private void DDelete_Click(object sender, EventArgs e)
+        {
+
+
+        }
+
+       
+    }
 }

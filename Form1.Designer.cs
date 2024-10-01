@@ -73,7 +73,17 @@
             DeleteMain = new TabPage();
             tabControl4 = new TabControl();
             ClientDelete = new TabPage();
+            DDelete = new Button();
+            label2 = new Label();
+            Delete = new ComboBox();
             dataGridView6 = new DataGridView();
+            Rubbish = new TabPage();
+            ReverseSubmit = new Button();
+            label5 = new Label();
+            Reverse = new ComboBox();
+            dataGridView7 = new DataGridView();
+            npgsqlCommandBuilder1 = new Npgsql.NpgsqlCommandBuilder();
+            npgsqlCommandBuilder2 = new Npgsql.NpgsqlCommandBuilder();
             tabControl1.SuspendLayout();
             SelectMainWindow.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
@@ -93,6 +103,8 @@
             tabControl4.SuspendLayout();
             ClientDelete.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridView6).BeginInit();
+            Rubbish.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dataGridView7).BeginInit();
             SuspendLayout();
             // 
             // tabControl1
@@ -560,6 +572,7 @@
             // tabControl4
             // 
             tabControl4.Controls.Add(ClientDelete);
+            tabControl4.Controls.Add(Rubbish);
             tabControl4.Location = new Point(-5, 0);
             tabControl4.Name = "tabControl4";
             tabControl4.SelectedIndex = 0;
@@ -569,6 +582,9 @@
             // ClientDelete
             // 
             ClientDelete.BackColor = Color.PapayaWhip;
+            ClientDelete.Controls.Add(DDelete);
+            ClientDelete.Controls.Add(label2);
+            ClientDelete.Controls.Add(Delete);
             ClientDelete.Controls.Add(dataGridView6);
             ClientDelete.Location = new Point(4, 29);
             ClientDelete.Name = "ClientDelete";
@@ -576,16 +592,106 @@
             ClientDelete.TabIndex = 2;
             ClientDelete.Text = "Client";
             // 
+            // DDelete
+            // 
+            DDelete.BackColor = SystemColors.Window;
+            DDelete.Location = new Point(181, 291);
+            DDelete.Name = "DDelete";
+            DDelete.Size = new Size(94, 29);
+            DDelete.TabIndex = 3;
+            DDelete.Text = "Delete";
+            DDelete.UseVisualStyleBackColor = false;
+            DDelete.Click += DDelete_Click_1;
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Location = new Point(7, 231);
+            label2.Name = "label2";
+            label2.Size = new Size(140, 20);
+            label2.TabIndex = 2;
+            label2.Text = "Who want to delete";
+            // 
+            // Delete
+            // 
+            Delete.BackColor = Color.AliceBlue;
+            Delete.FormattingEnabled = true;
+            Delete.Location = new Point(153, 228);
+            Delete.Name = "Delete";
+            Delete.Size = new Size(151, 28);
+            Delete.TabIndex = 1;
+            // 
             // dataGridView6
             // 
             dataGridView6.BackgroundColor = Color.PapayaWhip;
-            dataGridView6.BorderStyle = BorderStyle.None;
             dataGridView6.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridView6.Location = new Point(-4, 0);
             dataGridView6.Name = "dataGridView6";
             dataGridView6.RowHeadersWidth = 51;
-            dataGridView6.Size = new Size(376, 382);
+            dataGridView6.Size = new Size(794, 200);
             dataGridView6.TabIndex = 0;
+            // 
+            // Rubbish
+            // 
+            Rubbish.BackColor = Color.PapayaWhip;
+            Rubbish.Controls.Add(ReverseSubmit);
+            Rubbish.Controls.Add(label5);
+            Rubbish.Controls.Add(Reverse);
+            Rubbish.Controls.Add(dataGridView7);
+            Rubbish.Location = new Point(4, 29);
+            Rubbish.Name = "Rubbish";
+            Rubbish.Size = new Size(790, 383);
+            Rubbish.TabIndex = 3;
+            Rubbish.Text = "Bin";
+            // 
+            // ReverseSubmit
+            // 
+            ReverseSubmit.BackColor = SystemColors.Window;
+            ReverseSubmit.Location = new Point(104, 287);
+            ReverseSubmit.Name = "ReverseSubmit";
+            ReverseSubmit.Size = new Size(94, 29);
+            ReverseSubmit.TabIndex = 3;
+            ReverseSubmit.Text = "Submit";
+            ReverseSubmit.UseVisualStyleBackColor = false;
+            ReverseSubmit.Click += ReverseSubmit_Click;
+            // 
+            // label5
+            // 
+            label5.AutoSize = true;
+            label5.Location = new Point(7, 230);
+            label5.Name = "label5";
+            label5.Size = new Size(60, 20);
+            label5.TabIndex = 2;
+            label5.Text = "Reverse";
+            // 
+            // Reverse
+            // 
+            Reverse.BackColor = Color.AliceBlue;
+            Reverse.FormattingEnabled = true;
+            Reverse.Location = new Point(73, 227);
+            Reverse.Name = "Reverse";
+            Reverse.Size = new Size(151, 28);
+            Reverse.TabIndex = 1;
+            // 
+            // dataGridView7
+            // 
+            dataGridView7.BackgroundColor = Color.PapayaWhip;
+            dataGridView7.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridView7.Location = new Point(-4, 0);
+            dataGridView7.Name = "dataGridView7";
+            dataGridView7.RowHeadersWidth = 51;
+            dataGridView7.Size = new Size(794, 200);
+            dataGridView7.TabIndex = 0;
+            // 
+            // npgsqlCommandBuilder1
+            // 
+            npgsqlCommandBuilder1.QuotePrefix = "\"";
+            npgsqlCommandBuilder1.QuoteSuffix = "\"";
+            // 
+            // npgsqlCommandBuilder2
+            // 
+            npgsqlCommandBuilder2.QuotePrefix = "\"";
+            npgsqlCommandBuilder2.QuoteSuffix = "\"";
             // 
             // Form1
             // 
@@ -618,7 +724,11 @@
             DeleteMain.ResumeLayout(false);
             tabControl4.ResumeLayout(false);
             ClientDelete.ResumeLayout(false);
+            ClientDelete.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridView6).EndInit();
+            Rubbish.ResumeLayout(false);
+            Rubbish.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)dataGridView7).EndInit();
             ResumeLayout(false);
         }
 
@@ -670,5 +780,15 @@
         private TextBox TypeUpdate;
         private ComboBox CbUpdateName;
         private DataGridView dataGridView6;
+        private Label label2;
+        private ComboBox Delete;
+        private TabPage Rubbish;
+        private DataGridView dataGridView7;
+        private Label label5;
+        private ComboBox Reverse;
+        private Button DDelete;
+        private Npgsql.NpgsqlCommandBuilder npgsqlCommandBuilder1;
+        private Button ReverseSubmit;
+        private Npgsql.NpgsqlCommandBuilder npgsqlCommandBuilder2;
     }
 }
